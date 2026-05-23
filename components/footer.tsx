@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -12,20 +12,20 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex items-center gap-6">
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Terms
             </Link>
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Contact
@@ -39,5 +39,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

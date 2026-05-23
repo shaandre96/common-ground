@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignInPage() {
@@ -20,7 +20,7 @@ export default function SignInPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -62,6 +62,7 @@ export default function SignInPage() {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setSubmitted(false)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -76,7 +77,10 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm flex flex-col gap-6">
         {/* Logo */}
-        <Link href="/" className="font-serif text-xl tracking-tight text-center">
+        <Link
+          href="/"
+          className="font-serif text-xl tracking-tight text-center"
+        >
           Common<span className="text-terracotta">·</span>Ground
         </Link>
 
@@ -91,10 +95,11 @@ export default function SignInPage() {
 
           {/* Google OAuth */}
           <button
+            type="button"
             onClick={handleGoogleSignIn}
             className="w-full flex items-center justify-center gap-3 border border-border px-4 py-3 rounded-sm text-sm hover:bg-secondary transition-colors"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                 fill="#4285F4"

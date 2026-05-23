@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { track } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -10,6 +11,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      await track("signed_in");
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

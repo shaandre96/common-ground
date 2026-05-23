@@ -11,7 +11,7 @@ const stats = [
     value: "18 min",
     label: "avg. per session",
   },
-]
+];
 
 export function Stats() {
   return (
@@ -31,5 +31,5 @@ export function Stats() {
         </div>
       </div>
     </section>
-  )
+  );
 }

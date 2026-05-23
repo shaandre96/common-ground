@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 const topics = [
   "Climate Policy",
@@ -16,7 +16,7 @@ const topics = [
   "Remote Work",
   "Cryptocurrency",
   "Genetic Engineering",
-]
+];
 
 export function TopicExplorer() {
   return (
@@ -29,6 +29,7 @@ export function TopicExplorer() {
         <div className="flex flex-wrap gap-3">
           {topics.map((topic) => (
             <button
+              type="button"
               key={topic}
               className="text-sm border border-border px-4 py-2 rounded-sm hover:bg-sand-dark transition-colors"
             >
@@ -38,5 +39,5 @@ export function TopicExplorer() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,55 +1,55 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   /* CommonGround Design System */
-  --background: #F5F0E8; /* warm sand/parchment */
-  --foreground: #1C1A17; /* soft black */
-  --card: #EDE6D6;
-  --card-foreground: #1C1A17;
-  --popover: #EDE6D6;
-  --popover-foreground: #1C1A17;
-  --primary: #1C1A17; /* soft black for primary buttons */
-  --primary-foreground: #F5F0E8;
-  --secondary: #EDE6D6; /* sand dark */
-  --secondary-foreground: #1C1A17;
-  --muted: #EDE6D6;
-  --muted-foreground: #4A4640; /* Ink Mid */
-  --accent: #C4622D; /* terracotta */
-  --accent-foreground: #FFFFFF;
-  --destructive: #C4622D;
-  --destructive-foreground: #FFFFFF;
-  --border: #D9D0BC; /* thin borders */
-  --input: #D9D0BC;
-  --ring: #C4622D;
-  --chart-1: #C4622D;
-  --chart-2: #1C1A17;
-  --chart-3: #6B6560;
-  --chart-4: #D9D0BC;
-  --chart-5: #EBE6DC;
+  --background: #f5f0e8; /* warm sand/parchment */
+  --foreground: #1c1a17; /* soft black */
+  --card: #ede6d6;
+  --card-foreground: #1c1a17;
+  --popover: #ede6d6;
+  --popover-foreground: #1c1a17;
+  --primary: #1c1a17; /* soft black for primary buttons */
+  --primary-foreground: #f5f0e8;
+  --secondary: #ede6d6; /* sand dark */
+  --secondary-foreground: #1c1a17;
+  --muted: #ede6d6;
+  --muted-foreground: #4a4640; /* Ink Mid */
+  --accent: #c4622d; /* terracotta */
+  --accent-foreground: #ffffff;
+  --destructive: #c4622d;
+  --destructive-foreground: #ffffff;
+  --border: #d9d0bc; /* thin borders */
+  --input: #d9d0bc;
+  --ring: #c4622d;
+  --chart-1: #c4622d;
+  --chart-2: #1c1a17;
+  --chart-3: #6b6560;
+  --chart-4: #d9d0bc;
+  --chart-5: #ebe6dc;
   --radius: 0.125rem; /* 2px - sharp corners */
-  --sidebar: #F5F0E8;
-  --sidebar-foreground: #1C1A17;
-  --sidebar-primary: #1C1A17;
-  --sidebar-primary-foreground: #F5F0E8;
-  --sidebar-accent: #EBE6DC;
-  --sidebar-accent-foreground: #1C1A17;
-  --sidebar-border: #D9D0BC;
-  --sidebar-ring: #C4622D;
-  
+  --sidebar: #f5f0e8;
+  --sidebar-foreground: #1c1a17;
+  --sidebar-primary: #1c1a17;
+  --sidebar-primary-foreground: #f5f0e8;
+  --sidebar-accent: #ebe6dc;
+  --sidebar-accent-foreground: #1c1a17;
+  --sidebar-border: #d9d0bc;
+  --sidebar-ring: #c4622d;
+
   /* Custom tokens for CommonGround */
-  --terracotta: #C4622D;
-  --sand-dark: #EDE6D6;
-  --agree: #2D7D46;
+  --terracotta: #c4622d;
+  --sand-dark: #ede6d6;
+  --agree: #2d7d46;
   --agree-light: rgba(45, 125, 70, 0.1);
 }
 
 @theme inline {
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --font-serif: var(--font-lora), Georgia, serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-mono: "Geist Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -99,8 +99,35 @@
   body {
     @apply bg-background text-foreground;
     /* Dotted notebook background - subtle grid texture */
-    background-image: radial-gradient(circle, rgba(217, 208, 188, 0.6) 1px, transparent 1px);
+    background-image: radial-gradient(
+      circle,
+      rgba(217, 208, 188, 0.6) 1px,
+      transparent 1px
+    );
     background-size: 24px 24px;
     background-position: 12px 12px;
+  }
+
+  /* Interactive cursor affordances. Chromium ships `cursor: default` on
+     buttons now; we make every interactive element show the pointing-hand
+     and disabled elements show not-allowed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a,
+  summary,
+  label[for],
+  select,
+  [type="checkbox"],
+  [type="radio"],
+  [type="submit"],
+  [type="reset"],
+  [type="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }

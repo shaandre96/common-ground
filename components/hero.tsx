@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { ChatCard } from "./chat-card"
+import Link from "next/link";
+import { ChatCard } from "./chat-card";
 
 export function Hero() {
   return (
@@ -20,8 +20,9 @@ export function Hero() {
 
             {/* Body */}
             <p className="text-muted-foreground leading-relaxed max-w-md text-[0.95rem]">
-              CommonGround matches you with a stranger who holds a different view.
-              No algorithms gaming your feed. Just two people, one topic, and an open mind.
+              CommonGround matches you with a stranger who holds a different
+              view. No algorithms gaming your feed. Just two people, one topic,
+              and an open mind.
             </p>
 
             {/* CTAs */}
@@ -50,5 +51,5 @@ export function Hero() {
         </div>
       </div>
     </section>
-  )
+  );
 }

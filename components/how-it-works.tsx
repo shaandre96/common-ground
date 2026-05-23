@@ -14,11 +14,14 @@ const steps = [
     title: "Talk it out",
     description: "Real conversation, no likes, no algorithms.",
   },
-]
+];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-16 md:py-24 border-t border-border">
+    <section
+      id="how-it-works"
+      className="py-16 md:py-24 border-t border-border"
+    >
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           {steps.map((step) => (
@@ -35,5 +38,5 @@ export function HowItWorks() {
         </div>
       </div>
     </section>
-  )
+  );
 }

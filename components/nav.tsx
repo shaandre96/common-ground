@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
+import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export function Nav() {
-  const [user, setUser] = useState<User | null>(null)
-  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
+      setUser(user);
+    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-      },
-    )
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, [supabase.auth.onAuthStateChange, supabase.auth.getUser]);
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
-    setUser(null)
+    await supabase.auth.signOut();
+    setUser(null);
   }
 
   return (
@@ -69,6 +69,7 @@ export function Nav() {
                 Profile
               </Link>
               <button
+                type="button"
                 onClick={handleSignOut}
                 className="text-sm border border-border px-4 py-2 rounded-sm hover:bg-secondary transition-colors"
               >
@@ -94,5 +95,5 @@ export function Nav() {
         </div>
       </div>
     </nav>
-  )
+  );
 }
