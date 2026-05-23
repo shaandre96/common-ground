@@ -80,5 +80,17 @@
     "tsx": "4.22.3",
     "tw-animate-css": "1.3.3",
     "typescript": "5.7.3"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "darwin",
+        "linux"
+      ],
+      "cpu": [
+        "arm64",
+        "x64"
+      ]
+    }
   }
 }
