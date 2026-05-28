@@ -2,6 +2,21 @@
 
 A step-by-step walkthrough you can follow top-to-bottom before shipping. Every step has the command to run and what you should see.
 
+## Automated coverage
+
+Some of this is now automated — run these first; if they pass, you can skim the corresponding manual phases:
+
+```
+pnpm test       # unit tests (lib/stance, lib/prompts) via node:test
+pnpm test:e2e   # Playwright: full happy path (match → 3 rounds → results)
+```
+
+`pnpm test:e2e` starts its own dev server with `ENABLE_TEST_AUTH=1` and drives a real browser through onboarding-state setup, the matching screen, three rounds of voting, and the results page — asserting the "Converged" verdict and trajectory chart render. It needs `.env.local` (for `SUPABASE_SECRET_KEY`) and all migrations applied. It mutates the dev database but cleans up after itself.
+
+What's **still manual** (not yet automated): magic-link sign-in (verified separately), Google OAuth, reactions UX nuances, mobile-viewport visual checks, the cross-user security SQL probes, and everything in the deploy phase. Work through those below.
+
+---
+
 Plan to spend ~30–45 minutes. You'll need:
 
 - 1 desktop browser (Chrome / Firefox / Safari).

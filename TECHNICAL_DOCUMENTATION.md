@@ -245,6 +245,20 @@ Apply the migrations in the Supabase SQL Editor in numeric order.
 
 ---
 
+## Testing
+
+Two layers, both runnable with one command each.
+
+**Unit (`pnpm test`)** — Node's built-in test runner (`node:test`) via tsx, no bundler. Covers the pure-function libs: `lib/stance.ts` (score↔label↔stance mapping) and `lib/prompts.ts` (stage selection, deterministic prompt-per-match hashing, threshold ordering). Fast, no DB, no network. (We deliberately avoided Vitest here — v4's Rolldown and v3's Vite-7 pairing both hit native-binding / ESM-CJS issues on this machine; `node:test` sidesteps all of it.)
+
+**E2E (`pnpm test:e2e`)** — Playwright. `playwright.config.ts` defines a desktop-chromium project plus a mobile (iPhone 14) project that only runs `*.mobile.spec.ts`. The config boots its own dev server with `ENABLE_TEST_AUTH=1`.
+
+- **Auth in tests**: there's no password field in the real UI (magic-link only), so a test-only route `app/api/test/sign-in/route.ts` calls `signInWithPassword` server-side and sets the SSR cookies. It's gated by `NODE_ENV !== "production"` **and** `ENABLE_TEST_AUTH=1`, so it 404s everywhere except the test runner.
+- **Test fixtures** (`tests/helpers/`): `admin.ts` (service-role client), `auth.ts` (`ensureTestUser`, `signInAs`), `db.ts` (`resetChats`, `onboardUser`, `queueUserForProposition`, `fillMessages`, `castVoteForPartner`). These let a test set up exact DB state and drive the "partner" side deterministically without the bot worker.
+- **Happy-path spec** (`tests/e2e/happy-path.spec.ts`): signs in as User A, onboards both users via admin, queues User B, drives the real `/match` screen, then walks all three rounds (bulk-inserting messages to hit thresholds, voting via the UI, casting the partner's vote via admin), and asserts the results page shows "Converged" + the trajectory chart.
+
+Tests mutate the shared dev Supabase DB and clean up after themselves. For heavier suites, point them at a dedicated test Supabase project. Future specs to add: cross-user security, reactions, end-conversation, and a mobile-viewport pass.
+
 ## Design System
 
 Defined as CSS variables in `app/globals.css`, exposed to Tailwind via `@theme inline`.

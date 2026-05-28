@@ -9,6 +9,10 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
+    "test": "node --import tsx --test tests/unit/*.test.ts",
+    "test:unit": "node --import tsx --test tests/unit/*.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "seed:bots": "tsx scripts/seed-bots.ts",
     "reset:chats": "tsx scripts/reset-chats.ts",
     "bot": "tsx scripts/bot.ts",
@@ -70,6 +74,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
+    "@playwright/test": "1.60.0",
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^22",
     "@types/react": "19.2.14",
