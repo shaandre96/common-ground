@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DeleteAccount } from "@/components/delete-account";
 import { StanceSparkline } from "@/components/stance-sparkline";
 import { scoreLabel } from "@/lib/stance";
 import { createClient } from "@/lib/supabase/server";
@@ -209,17 +210,17 @@ export default async function ProfilePage() {
           </section>
         )}
 
-        <form
-          action={signOut}
-          className="flex justify-end border-t border-border pt-6"
-        >
-          <button
-            type="submit"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
+        <div className="flex flex-col gap-6 border-t border-border pt-6">
+          <form action={signOut} className="flex justify-end">
+            <button
+              type="submit"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
+          <DeleteAccount />
+        </div>
       </div>
     </div>
   );
