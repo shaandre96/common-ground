@@ -1,32 +1,32 @@
 /**
  * Bot CLI — make a seeded bot do things.
  *
- *   pnpm bot queue <proposition-slug> [stance] [bot-name]
+ *   npm run bot queue <proposition-slug> [stance] [bot-name]
  *     Sign in as the bot and call find_match. Optional stance overrides the
  *     bot's existing user_propositions stance. Default bot: Alex.
  *
- *   pnpm bot pair <your-email> <proposition-slug> <your-stance> <bot-stance> [bot-name]
+ *   npm run bot pair <your-email> <proposition-slug> <your-stance> <bot-stance> [bot-name]
  *     Hand-pair a bot with the human user (looked up by email). Prints the
  *     chat URL. Useful for testing /chat before the matching screen is built.
  *
- *   pnpm bot say <bot-name> <match-id> <message...>
+ *   npm run bot say <bot-name> <match-id> <message...>
  *     Send a message as the bot in an existing match. The real user sees it
  *     arrive via realtime.
  *
- *   pnpm bot vote <bot-name> <match-id> <score> [reflection...]
+ *   npm run bot vote <bot-name> <match-id> <score> [reflection...]
  *     Vote on the current round. score is 1–7 (Likert). Optional reflection
  *     becomes the private one-line note stored in the reflections table.
  *
- *   pnpm bot leave [bot-name]
+ *   npm run bot leave [bot-name]
  *     Make the bot drop out of the match queue.
  *
- *   pnpm bot status
+ *   npm run bot status
  *     Show current queue and active matches across all bots.
  *
  * Examples:
- *   pnpm bot queue climate-reparations agree
- *   pnpm bot queue ai-entry-level-jobs disagree Sam
- *   pnpm bot leave Sam
+ *   npm run bot queue climate-reparations agree
+ *   npm run bot queue ai-entry-level-jobs disagree Sam
+ *   npm run bot leave Sam
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -67,7 +67,7 @@ async function signInAsBot(name: string): Promise<SupabaseClient> {
   if (error) {
     console.error(
       `Could not sign in as ${name}: ${error.message}\n` +
-        `Did you run \`pnpm seed:bots\`?`,
+        `Did you run \`npm run seed:bots\`?`,
     );
     process.exit(1);
   }
@@ -92,7 +92,7 @@ async function queueCmd(args: string[]) {
   const [slug, stance, name = "Alex"] = args;
   if (!slug) {
     console.error(
-      "usage: pnpm bot queue <proposition-slug> [stance] [bot-name]",
+      "usage: npm run bot queue <proposition-slug> [stance] [bot-name]",
     );
     process.exit(1);
   }
@@ -143,7 +143,7 @@ async function pairCmd(args: string[]) {
   const [userEmail, slug, userStance, botStance, botName = "Sam"] = args;
   if (!userEmail || !slug || !userStance || !botStance) {
     console.error(
-      "usage: pnpm bot pair <your-email> <proposition-slug> <your-stance> <bot-stance> [bot-name]",
+      "usage: npm run bot pair <your-email> <proposition-slug> <your-stance> <bot-stance> [bot-name]",
     );
     process.exit(1);
   }
@@ -175,7 +175,9 @@ async function pairCmd(args: string[]) {
     .maybeSingle();
   if (botErr) throw botErr;
   if (!bot) {
-    console.error(`No bot named ${botName} — did you run \`pnpm seed:bots\`?`);
+    console.error(
+      `No bot named ${botName} — did you run \`npm run seed:bots\`?`,
+    );
     process.exit(1);
   }
 
@@ -204,7 +206,7 @@ async function sayCmd(args: string[]) {
   const [botName, matchId, ...rest] = args;
   const body = rest.join(" ");
   if (!botName || !matchId || !body) {
-    console.error("usage: pnpm bot say <bot-name> <match-id> <message...>");
+    console.error("usage: npm run bot say <bot-name> <match-id> <message...>");
     process.exit(1);
   }
   const client = await signInAsBot(botName);
@@ -227,7 +229,7 @@ async function voteCmd(args: string[]) {
   const [botName, matchId, scoreStr, ...rest] = args;
   if (!botName || !matchId || !scoreStr) {
     console.error(
-      "usage: pnpm bot vote <bot-name> <match-id> <score:1-7> [reflection...]",
+      "usage: npm run bot vote <bot-name> <match-id> <score:1-7> [reflection...]",
     );
     process.exit(1);
   }

@@ -1,7 +1,7 @@
 /**
  * Wipe conversation data for a fresh testing state.
  *
- *   pnpm reset:chats
+ *   npm run reset:chats
  *
  * Deletes:
  *   - all matches
