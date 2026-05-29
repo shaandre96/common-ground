@@ -68,10 +68,11 @@ Create `.env.local`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
-SUPABASE_SECRET_KEY=sb_secret_...          # server-only: scripts + tests
+SUPABASE_SECRET_KEY=sb_secret_...          # server-only: scripts, tests, account deletion
 BOT_PASSWORD=<any-string>                  # shared password for seeded bots
 GROQ_API_KEY=gsk_...                       # optional — bots fall back to canned replies if unset
 BOT_WEBHOOK_SECRET=<random-string>         # optional locally, required in production
+RESEND_API_KEY=re_...                      # required for the /contact form to send mail
 ```
 
 Apply the migrations in `supabase/migrations/` (`00001` → `00009`) in order via the Supabase SQL Editor, then:
