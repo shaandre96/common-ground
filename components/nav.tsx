@@ -7,7 +7,15 @@ import { createClient } from "@/lib/supabase/client";
 
 export function Nav() {
   const [user, setUser] = useState<User | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -29,7 +37,11 @@ export function Nav() {
   }
 
   return (
-    <nav className="border-b border-border bg-background sticky top-0 z-50">
+    <nav
+      className={`border-b border-border bg-background sticky top-0 z-50 transition-shadow ${
+        scrolled ? "shadow-sm" : ""
+      }`}
+    >
       <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="font-serif text-xl tracking-tight">

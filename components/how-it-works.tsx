@@ -1,3 +1,5 @@
+import { Reveal } from "./reveal";
+
 const steps = [
   {
     number: "01",
@@ -24,16 +26,18 @@ export function HowItWorks() {
     >
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-          {steps.map((step) => (
-            <div key={step.number} className="flex flex-col gap-3">
-              <span className="font-serif text-6xl md:text-7xl italic text-muted-foreground/30">
-                {step.number}
-              </span>
-              <h3 className="font-serif text-xl">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {step.description}
-              </p>
-            </div>
+          {steps.map((step, i) => (
+            <Reveal key={step.number} delay={i * 0.1}>
+              <div className="flex flex-col gap-3">
+                <span className="font-serif text-6xl md:text-7xl italic text-muted-foreground/30">
+                  {step.number}
+                </span>
+                <h3 className="font-serif text-xl">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </div>

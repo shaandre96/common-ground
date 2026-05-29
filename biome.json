@@ -16,7 +16,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": {
+        "noImportantStyles": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off"
+      }
     }
   },
   "javascript": {
@@ -49,7 +55,6 @@
             "useAriaPropsForRole": "off"
           },
           "suspicious": {
-            "noArrayIndexKey": "off",
             "noDocumentCookie": "off"
           },
           "security": {
