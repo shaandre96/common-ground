@@ -6,7 +6,7 @@
  * `onboarded=true` and a `user_propositions` row for every proposition so any
  * (proposition, stance) combo can find a partner. Idempotent — safe to re-run.
  *
- *   pnpm seed:bots
+ *   npm run seed:bots
  */
 
 import { createClient } from "@supabase/supabase-js";

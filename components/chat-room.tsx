@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, ThumbsDown, ThumbsUp } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -55,6 +56,9 @@ const REACTION_TYPES: { type: ReactionType; Icon: typeof Heart }[] = [
   { type: "thumbs_down", Icon: ThumbsDown },
 ];
 
+// Shared editorial easing (gentle ease-out, no overshoot).
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
 export function ChatRoom({
   matchId,
   meId,
@@ -95,6 +99,9 @@ export function ChatRoom({
   const supabase = useRef(createClient()).current;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion();
+  // Messages present at mount shouldn't animate; only ones arriving live do.
+  const initialIdsRef = useRef(new Set(initialMessages.map((m) => m.id)));
 
   const stage = useMemo(() => stageById(currentRound), [currentRound]);
   const prompt = useMemo(() => promptFor(stage, matchId), [stage, matchId]);
@@ -443,6 +450,9 @@ export function ChatRoom({
               message={m}
               meId={meId}
               onReact={handleReact}
+              animateIn={
+                m.sender_id !== meId && !initialIdsRef.current.has(m.id)
+              }
             />
           ))}
         </div>
@@ -480,10 +490,15 @@ export function ChatRoom({
               partnerVoted={hasPartnerVotedThisRound}
             />
           ) : roundComplete && haveIVotedThisRound ? (
-            <div className="text-center py-3 text-sm text-muted-foreground">
+            <motion.div
+              className="text-center py-3 text-sm text-muted-foreground"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               Your vote is in. Waiting for the other person to finish Round{" "}
               {currentRound}…
-            </div>
+            </motion.div>
           ) : (
             <>
               <div className="flex items-center justify-between text-xs">
@@ -496,6 +511,20 @@ export function ChatRoom({
                 <span className="text-muted-foreground">
                   {messageCount} / {stage.endAtMessages}
                 </span>
+              </div>
+              <div className="h-0.5 w-full overflow-hidden rounded-full bg-border/50">
+                <motion.div
+                  className="h-full bg-terracotta"
+                  initial={false}
+                  animate={{
+                    width: `${Math.min(100, (messageCount / stage.endAtMessages) * 100)}%`,
+                  }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.4, ease: EASE }
+                  }
+                />
               </div>
               {error && <p className="text-xs text-terracotta">{error}</p>}
               <form onSubmit={handleSubmit} className="flex gap-2">
@@ -532,11 +561,14 @@ function MessageRow({
   message,
   meId,
   onReact,
+  animateIn,
 }: {
   message: OptimisticMessage;
   meId: string;
   onReact: (messageId: string, type: ReactionType) => void;
+  animateIn: boolean;
 }) {
+  const reduceMotion = useReducedMotion();
   const isMe = message.sender_id === meId;
   const base = "px-4 py-3 max-w-[80%] text-sm leading-relaxed border";
   const themBubble = `${base} bg-sand-dark border-border rounded-tr-md rounded-bl-md rounded-br-md`;
@@ -575,13 +607,23 @@ function MessageRow({
     ? (message.reactions ?? []).filter((r) => r.user_id !== meId)
     : [];
 
+  const enterAnim =
+    animateIn && !reduceMotion
+      ? {
+          initial: { opacity: 0, x: -8 },
+          animate: { opacity: 1, x: 0 },
+          transition: { duration: 0.3, ease: EASE },
+        }
+      : {};
+
   return (
-    <div
+    <motion.div
       className={`group flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
       onTouchStart={!isMe ? startTimer : undefined}
       onTouchEnd={!isMe ? cancelTimer : undefined}
       onTouchMove={!isMe ? cancelTimer : undefined}
       onTouchCancel={!isMe ? cancelTimer : undefined}
+      {...enterAnim}
     >
       <div className={isMe ? meBubble : themBubble}>{message.body}</div>
 
@@ -610,24 +652,28 @@ function MessageRow({
       {!message.pending && isMe && partnerReactionsOnMine.length > 0 && (
         <ReadOnlyReactions reactions={partnerReactionsOnMine} />
       )}
-    </div>
+    </motion.div>
   );
 }
 
 function ReadOnlyReactions({ reactions }: { reactions: Reaction[] }) {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="flex gap-1">
       {REACTION_TYPES.map(({ type, Icon }) => {
         const count = reactions.filter((r) => r.type === type).length;
         if (count === 0) return null;
         return (
-          <span
+          <motion.span
             key={type}
             className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-terracotta"
+            initial={reduceMotion ? false : { scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.25, ease: EASE }}
           >
             <Icon className="w-3 h-3" fill="currentColor" strokeWidth={1.5} />
             <span>{count}</span>
-          </span>
+          </motion.span>
         );
       })}
     </div>
@@ -643,6 +689,7 @@ function ReactionBar({
   meId: string;
   onReact: (type: ReactionType) => void;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="flex gap-1">
       {REACTION_TYPES.map(({ type, Icon }) => {
@@ -654,12 +701,13 @@ function ReactionBar({
           ? "flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-terracotta transition-colors"
           : "flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors";
         return (
-          <button
+          <motion.button
             key={type}
             type="button"
             onClick={() => onReact(type)}
             className={cls}
             aria-pressed={isMine}
+            whileTap={reduceMotion ? undefined : { scale: 0.85 }}
           >
             <Icon
               className="w-3 h-3"
@@ -667,7 +715,7 @@ function ReactionBar({
               strokeWidth={1.5}
             />
             {count > 0 && <span>{count}</span>}
-          </button>
+          </motion.button>
         );
       })}
     </div>
@@ -695,8 +743,14 @@ function VotePanel({
   onSubmit: () => void;
   partnerVoted: boolean;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="flex flex-col gap-3 py-2">
+    <motion.div
+      className="flex flex-col gap-3 py-2"
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: EASE }}
+    >
       <div className="flex items-center justify-between text-xs">
         <span className="uppercase tracking-widest text-terracotta">
           {roundName} round complete
@@ -731,6 +785,6 @@ function VotePanel({
           {submitting ? "Submitting..." : "Submit vote"}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -62,14 +62,7 @@ export function StanceSparkline({ points, width = 120, height = 32 }: Props) {
       )}
 
       {points.map((s, i) => (
-        <circle
-          // biome-ignore lint/suspicious/noArrayIndexKey: positional points
-          key={i}
-          cx={x(i)}
-          cy={y(s)}
-          r="2.5"
-          fill="var(--foreground)"
-        />
+        <circle key={i} cx={x(i)} cy={y(s)} r="2.5" fill="var(--foreground)" />
       ))}
     </svg>
   );

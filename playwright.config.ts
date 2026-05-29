@@ -5,7 +5,7 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Tests assume:
  *   - A running Next.js dev server at http://localhost:3000 (Playwright will
- *     start one via `webServer` below if you aren't already running `pnpm dev`).
+ *     start one via `webServer` below if you aren't already running `npm run dev`).
  *   - The dev server has `ENABLE_TEST_AUTH=1` set so the test-only sign-in
  *     route works.
  *   - `.env.local` has SUPABASE_SECRET_KEY for the admin client used by the
@@ -49,7 +49,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

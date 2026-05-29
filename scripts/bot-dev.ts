@@ -12,7 +12,7 @@
  * production routes call. Same logic in both environments — only the trigger
  * mechanism differs.
  *
- *   pnpm bot:dev
+ *   npm run bot:dev
  */
 
 import {

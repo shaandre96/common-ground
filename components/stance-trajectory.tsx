@@ -1,10 +1,17 @@
+"use client";
+
 /**
  * Stance trajectory chart — two lines (you + partner) plotted across four
- * data points (Before, R1, R2, R3) on a 1–7 y-axis. Pure server-rendered SVG.
+ * data points (Before, R1, R2, R3) on a 1–7 y-axis.
  *
  * Editorial style to match the rest of the app: 1px borders, no gradients,
- * dashed reference line at y=4 (unsure), small dots at each data point.
+ * dashed reference line at y=4 (unsure), small dots at each data point. The
+ * lines draw on and the dots pop in when the chart scrolls into view. Honors
+ * prefers-reduced-motion by rendering the final state immediately.
  */
+
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { useRef } from "react";
 
 type Trajectory = {
   baseline: number;
@@ -20,6 +27,12 @@ export function StanceTrajectory({
   you: Trajectory;
   them: Trajectory;
 }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+  const reduceMotion = useReducedMotion();
+  // When reduced motion is requested, show the final state immediately.
+  const show = reduceMotion || inView;
+
   // viewBox math
   const W = 340;
   const H = 200;
@@ -50,9 +63,44 @@ export function StanceTrajectory({
 
   const xLabels = ["Before", "R1", "R2", "R3"];
 
+  // Line draws over ~1s; dots pop in left-to-right roughly as the line front
+  // reaches them. The "you" line trails the "them" line slightly.
+  const lineTransition = (delay: number) =>
+    reduceMotion
+      ? { duration: 0 }
+      : {
+          pathLength: { duration: 1, ease: "easeInOut" as const, delay },
+          opacity: { duration: 0.2, delay },
+        };
+  const dotTransition = (delay: number) =>
+    reduceMotion
+      ? { duration: 0 }
+      : { duration: 0.3, ease: "easeOut" as const, delay };
+  const dotStyle = {
+    transformBox: "fill-box",
+    transformOrigin: "center",
+  } as const;
+
+  function dots(t: Trajectory, stroke: string, prefix: string, base: number) {
+    return [t.baseline, t.r1, t.r2, t.r3].map((s, i) => (
+      <motion.circle
+        key={`${prefix}-${i}`}
+        cx={x(i)}
+        cy={y(s)}
+        r="4"
+        fill={stroke}
+        style={dotStyle}
+        initial={reduceMotion ? false : { scale: 0.4, opacity: 0 }}
+        animate={show ? { scale: 1, opacity: 1 } : { scale: 0.4, opacity: 0 }}
+        transition={dotTransition(base + i * 0.18)}
+      />
+    ));
+  }
+
   return (
     <div className="w-full flex flex-col gap-3">
       <svg
+        ref={ref}
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
@@ -88,7 +136,6 @@ export function StanceTrajectory({
         {/* X-axis labels */}
         {xLabels.map((label, i) => (
           <text
-            // biome-ignore lint/suspicious/noArrayIndexKey: static label array
             key={i}
             x={x(i)}
             y={H - padB + 16}
@@ -102,40 +149,32 @@ export function StanceTrajectory({
         ))}
 
         {/* THEM line + dots */}
-        <polyline
+        <motion.polyline
           fill="none"
           stroke={themStroke}
           strokeWidth="1.5"
           points={themPoints}
+          initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+          animate={
+            show ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }
+          }
+          transition={lineTransition(0)}
         />
-        {[them.baseline, them.r1, them.r2, them.r3].map((s, i) => (
-          <circle
-            // biome-ignore lint/suspicious/noArrayIndexKey: positional points
-            key={`them-${i}`}
-            cx={x(i)}
-            cy={y(s)}
-            r="4"
-            fill={themStroke}
-          />
-        ))}
+        {dots(them, themStroke, "them", 0.25)}
 
         {/* YOU line + dots (drawn last so it's on top) */}
-        <polyline
+        <motion.polyline
           fill="none"
           stroke={youStroke}
           strokeWidth="1.5"
           points={youPoints}
+          initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+          animate={
+            show ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }
+          }
+          transition={lineTransition(0.12)}
         />
-        {[you.baseline, you.r1, you.r2, you.r3].map((s, i) => (
-          <circle
-            // biome-ignore lint/suspicious/noArrayIndexKey: positional points
-            key={`you-${i}`}
-            cx={x(i)}
-            cy={y(s)}
-            r="4"
-            fill={youStroke}
-          />
-        ))}
+        {dots(you, youStroke, "you", 0.37)}
       </svg>
 
       {/* Legend */}

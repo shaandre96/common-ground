@@ -11,7 +11,7 @@ function stanceFor(score: number): Stance {
 }
 
 /**
- * Mirror of `pnpm reset:chats` but synchronous (no prompt). Run before tests
+ * Mirror of `npm run reset:chats` but synchronous (no prompt). Run before tests
  * that need a clean conversation slate. Keeps users + onboarding picks +
  * onboarding-time stance baselines.
  */

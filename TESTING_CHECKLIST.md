@@ -7,11 +7,11 @@ A step-by-step walkthrough you can follow top-to-bottom before shipping. Every s
 Some of this is now automated — run these first; if they pass, you can skim the corresponding manual phases:
 
 ```
-pnpm test       # unit tests (lib/stance, lib/prompts) via node:test
-pnpm test:e2e   # Playwright: full happy path (match → 3 rounds → results)
+npm test       # unit tests (lib/stance, lib/prompts) via node:test
+npm run test:e2e   # Playwright: full happy path (match → 3 rounds → results)
 ```
 
-`pnpm test:e2e` starts its own dev server with `ENABLE_TEST_AUTH=1` and drives a real browser through onboarding-state setup, the matching screen, three rounds of voting, and the results page — asserting the "Converged" verdict and trajectory chart render. It needs `.env.local` (for `SUPABASE_SECRET_KEY`) and all migrations applied. It mutates the dev database but cleans up after itself.
+`npm run test:e2e` starts its own dev server with `ENABLE_TEST_AUTH=1` and drives a real browser through onboarding-state setup, the matching screen, three rounds of voting, and the results page — asserting the "Converged" verdict and trajectory chart render. It needs `.env.local` (for `SUPABASE_SECRET_KEY`) and all migrations applied. It mutates the dev database but cleans up after itself.
 
 What's **still manual** (not yet automated): magic-link sign-in (verified separately), Google OAuth, reactions UX nuances, mobile-viewport visual checks, the cross-user security SQL probes, and everything in the deploy phase. Work through those below.
 
@@ -55,7 +55,7 @@ In the project directory.
 **Terminal A** — Next.js dev server:
 
 ```
-pnpm dev
+npm run dev
 ```
 
 Wait for `✓ Ready in <Xms>` on port 3000. Leave it running.
@@ -63,7 +63,7 @@ Wait for `✓ Ready in <Xms>` on port 3000. Leave it running.
 **Terminal B** — Bot worker:
 
 ```
-pnpm bot:dev
+npm run bot:dev
 ```
 
 You should see:
@@ -79,7 +79,7 @@ You should see:
 Ctrl+C to stop.
 ```
 
-If you see "could not sign in", run `pnpm seed:bots` first.
+If you see "could not sign in", run `npm run seed:bots` first.
 
 **Terminal C** — for ad-hoc commands during testing (status checks, etc).
 
@@ -88,7 +88,7 @@ If you see "could not sign in", run `pnpm seed:bots` first.
 In Terminal C:
 
 ```
-pnpm reset:chats
+npm run reset:chats
 ```
 
 Type `yes` to confirm. Confirms it deleted matches, messages, reactions, reflections, conversation stance votes, and queue entries. Onboarding picks and user accounts stay.
@@ -98,7 +98,7 @@ Type `yes` to confirm. Confirms it deleted matches, messages, reactions, reflect
 In Terminal C:
 
 ```
-pnpm bot status
+npm run bot status
 ```
 
 Expected:
@@ -203,10 +203,10 @@ To speed-test instead of typing 60+ messages, in Terminal C:
 
 ```
 # Send messages as the bot directly (these don't take a delay)
-pnpm bot say <BotName> <match-id> "another point"
+npm run bot say <BotName> <match-id> "another point"
 
 # When the round threshold is hit, vote on it as the bot
-pnpm bot vote <BotName> <match-id> 5 "lean agree but warming up"
+npm run bot vote <BotName> <match-id> 5 "lean agree but warming up"
 ```
 
 You still need to send YOUR messages from the browser to count toward the 100-message cap.
@@ -303,7 +303,7 @@ select public.toggle_reaction('<that-message-id>', 'heart');
 
 ## Phase 3 · Reactions UX (desktop + mobile)
 
-Back in Browser A, sign in and `pnpm bot pair YOUR_EMAIL ai-entry-level-jobs disagree agree Sam` (or queue from /match). Land in a chat.
+Back in Browser A, sign in and `npm run bot pair YOUR_EMAIL ai-entry-level-jobs disagree agree Sam` (or queue from /match). Land in a chat.
 
 ### Step 3.1 — Desktop hover
 
@@ -378,7 +378,7 @@ Visit `/match`, pick a different proposition, click **Find someone**, get paired
 In Terminal C:
 
 ```
-pnpm bot status
+npm run bot status
 ```
 
 **Expected**: that match is no longer in active matches (status went to `abandoned`).
@@ -415,26 +415,26 @@ The `[groq <N>ms]` confirms the LLM call succeeded.
 
 1. Stop Terminal B (Ctrl+C).
 2. In `.env.local`, **temporarily** comment out or blank `GROQ_API_KEY=`.
-3. Restart `pnpm bot:dev`.
+3. Restart `npm run bot:dev`.
 4. Send a chat message. Bot replies as before, but Terminal B shows:
    ```
    [Alex   ] reply <id> [fallback]: <a canned line from the pool>
      (no_key)
    ```
-5. **Restore** `GROQ_API_KEY` and restart `pnpm bot:dev`.
+5. **Restore** `GROQ_API_KEY` and restart `npm run bot:dev`.
 
 ### Step 5.3 — Bots don't ping-pong each other
 
 In Terminal C:
 
 ```
-pnpm bot pair YOUR_EMAIL climate-reparations agree disagree Alex
+npm run bot pair YOUR_EMAIL climate-reparations agree disagree Alex
 ```
 
 Then in another Terminal C invocation pair a second bot with Sam:
 
 ```
-pnpm bot pair OTHER_EMAIL_THAT_DOES_NOT_EXIST ... 
+npm run bot pair OTHER_EMAIL_THAT_DOES_NOT_EXIST ... 
 ```
 
 Actually just trigger two bots into the same conversation by manually inserting a match between two bots. (Easier: skip this test — the `allBotIds` filter is well-covered by the code.)
@@ -473,7 +473,7 @@ For the funnel query, see `TECHNICAL_DOCUMENTATION.md → Analytics`.
 In Terminal C:
 
 ```
-pnpm lint
+npm run lint
 ```
 
 **Expected**: `Found 6 warnings.` (the known `noNonNullAssertion` warnings on Supabase clients — these don't fail the build). Exit code 0.
@@ -485,7 +485,7 @@ npx tsc --noEmit
 **Expected**: no output, exit code 0.
 
 ```
-pnpm build
+npm run build
 ```
 
 **Expected**: completes with a route summary. No TypeScript errors. Reasonable bundle sizes.
@@ -562,7 +562,7 @@ Save each.
 Locally (with `.env.local` pointed at production URL + secret key — if you've been using one project, no changes needed):
 
 ```
-pnpm seed:bots
+npm run seed:bots
 ```
 
 Expected: 5 bots created (or "exists" if already there).
@@ -608,13 +608,13 @@ Should match the events list from Phase 6 for your smoke test.
 
 **Magic link redirects to `/sign-in?error=auth`.** Either the link was already used (request a new one) or the auth callback path isn't matching. Verify your Supabase URL configuration includes `http://localhost:3000` (dev) or your Vercel URL (prod).
 
-**Vote panel never appears.** You haven't hit 20/50/100 messages. Either send more, or use `pnpm bot say` to top off the count.
+**Vote panel never appears.** You haven't hit 20/50/100 messages. Either send more, or use `npm run bot say` to top off the count.
 
-**Bot voted but round didn't advance.** Both users need to vote. Check `pnpm bot status` — if the match is still `active` and `current_round` is what you expected, you (the human) haven't voted yet.
+**Bot voted but round didn't advance.** Both users need to vote. Check `npm run bot status` — if the match is still `active` and `current_round` is what you expected, you (the human) haven't voted yet.
 
 **Webhook 401 errors in Vercel logs.** The `BOT_WEBHOOK_SECRET` in Vercel doesn't match the `Authorization: Bearer ...` header in the Supabase webhook configuration. Fix one or the other.
 
-**Production `pnpm seed:bots` says "could not sign in".** Either the bots don't exist yet (re-run) or the password in `.env.local` doesn't match what was used to create them. To reset, delete the bot users from Supabase Dashboard → Authentication → Users and re-run the seeder.
+**Production `npm run seed:bots` says "could not sign in".** Either the bots don't exist yet (re-run) or the password in `.env.local` doesn't match what was used to create them. To reset, delete the bot users from Supabase Dashboard → Authentication → Users and re-run the seeder.
 
 ---
 

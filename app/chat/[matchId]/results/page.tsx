@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Reveal } from "@/components/reveal";
 import { StanceTrajectory } from "@/components/stance-trajectory";
 import { scoreLabel } from "@/lib/stance";
 import { createClient } from "@/lib/supabase/server";
@@ -111,112 +112,124 @@ export default async function ResultsPage({ params }: PageProps) {
       </Link>
 
       <div className="w-full max-w-2xl flex flex-col gap-10">
-        <header className="flex flex-col gap-3">
-          <span className="text-xs uppercase tracking-widest text-terracotta">
-            {proposition.topic?.name ?? "Conversation"} · complete
-          </span>
-          <h1 className="font-serif text-2xl md:text-3xl leading-snug">
-            {proposition.text}
-          </h1>
-        </header>
+        <Reveal>
+          <header className="flex flex-col gap-3">
+            <span className="text-xs uppercase tracking-widest text-terracotta">
+              {proposition.topic?.name ?? "Conversation"} · complete
+            </span>
+            <h1 className="font-serif text-2xl md:text-3xl leading-snug">
+              {proposition.text}
+            </h1>
+          </header>
+        </Reveal>
 
         {/* Verdict card */}
-        <section className="border border-border bg-card p-6 flex flex-col gap-2 text-center">
-          <span className="text-xs uppercase tracking-widest text-muted-foreground">
-            Result
-          </span>
-          <h2 className="font-serif text-3xl">{verdict}</h2>
-          <p className="text-sm text-muted-foreground">
-            {verdictBlurb(verdict)}
-          </p>
-        </section>
+        <Reveal delay={0.08}>
+          <section className="border border-border bg-card p-6 flex flex-col gap-2 text-center">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+              Result
+            </span>
+            <h2 className="font-serif text-3xl">{verdict}</h2>
+            <p className="text-sm text-muted-foreground">
+              {verdictBlurb(verdict)}
+            </p>
+          </section>
+        </Reveal>
 
         {/* Trajectory chart */}
-        <section className="flex flex-col gap-4">
-          <h3 className="text-xs uppercase tracking-widest text-muted-foreground">
-            How your positions moved
-          </h3>
-          <StanceTrajectory you={you} them={them} />
-        </section>
+        <Reveal delay={0.16}>
+          <section className="flex flex-col gap-4">
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground">
+              How your positions moved
+            </h3>
+            <StanceTrajectory you={you} them={them} />
+          </section>
+        </Reveal>
 
         {/* Per-user before/after numbers */}
-        <section className="grid grid-cols-2 gap-6">
-          <div className="border border-border p-4 flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">
-              You
-            </span>
-            <p className="text-sm">
-              Started:{" "}
-              <span className="text-foreground font-medium">
-                {scoreLabel(you.baseline)} ({you.baseline})
+        <Reveal delay={0.24}>
+          <section className="grid grid-cols-2 gap-6">
+            <div className="border border-border p-4 flex flex-col gap-2">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                You
               </span>
-            </p>
-            <p className="text-sm">
-              Ended:{" "}
-              <span className="text-foreground font-medium">
-                {scoreLabel(you.r3)} ({you.r3})
+              <p className="text-sm">
+                Started:{" "}
+                <span className="text-foreground font-medium">
+                  {scoreLabel(you.baseline)} ({you.baseline})
+                </span>
+              </p>
+              <p className="text-sm">
+                Ended:{" "}
+                <span className="text-foreground font-medium">
+                  {scoreLabel(you.r3)} ({you.r3})
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Net: {signedDelta(you)}
+              </p>
+            </div>
+            <div className="border border-border p-4 flex flex-col gap-2">
+              <span className="text-xs uppercase tracking-widest text-terracotta">
+                Them
               </span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Net: {signedDelta(you)}
-            </p>
-          </div>
-          <div className="border border-border p-4 flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-widest text-terracotta">
-              Them
-            </span>
-            <p className="text-sm">
-              Started:{" "}
-              <span className="text-foreground font-medium">
-                {scoreLabel(them.baseline)} ({them.baseline})
-              </span>
-            </p>
-            <p className="text-sm">
-              Ended:{" "}
-              <span className="text-foreground font-medium">
-                {scoreLabel(them.r3)} ({them.r3})
-              </span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Net: {signedDelta(them)}
-            </p>
-          </div>
-        </section>
+              <p className="text-sm">
+                Started:{" "}
+                <span className="text-foreground font-medium">
+                  {scoreLabel(them.baseline)} ({them.baseline})
+                </span>
+              </p>
+              <p className="text-sm">
+                Ended:{" "}
+                <span className="text-foreground font-medium">
+                  {scoreLabel(them.r3)} ({them.r3})
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Net: {signedDelta(them)}
+              </p>
+            </div>
+          </section>
+        </Reveal>
 
         {/* Your own reflections (partner can't see these) */}
         {myReflections && myReflections.length > 0 && (
-          <section className="flex flex-col gap-3">
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground">
-              Your reflections (private)
-            </h3>
-            <div className="flex flex-col border border-border rounded-sm divide-y divide-border">
-              {myReflections.map((r) => (
-                <div key={r.round} className="p-4 flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Round {r.round}
-                  </span>
-                  <p className="text-sm leading-relaxed">{r.text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          <Reveal delay={0.32}>
+            <section className="flex flex-col gap-3">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground">
+                Your reflections (private)
+              </h3>
+              <div className="flex flex-col border border-border rounded-sm divide-y divide-border">
+                {myReflections.map((r) => (
+                  <div key={r.round} className="p-4 flex flex-col gap-1">
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                      Round {r.round}
+                    </span>
+                    <p className="text-sm leading-relaxed">{r.text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
         )}
 
         {/* CTA */}
-        <div className="flex items-center justify-between border-t border-border pt-6">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Home
-          </Link>
-          <Link
-            href="/match"
-            className="text-sm bg-foreground text-primary-foreground px-5 py-2.5 rounded-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            Find another conversation
-          </Link>
-        </div>
+        <Reveal delay={0.4}>
+          <div className="flex items-center justify-between border-t border-border pt-6">
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Home
+            </Link>
+            <Link
+              href="/match"
+              className="text-sm bg-foreground text-primary-foreground px-5 py-2.5 rounded-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Find another conversation
+            </Link>
+          </div>
+        </Reveal>
       </div>
     </div>
   );
