@@ -17,6 +17,7 @@ This document covers the architecture, key technical decisions, and how a reques
 | Realtime     | Supabase Realtime                   | Postgres logical replication → WebSocket push, RLS-aware out of the box    |
 | Hosting      | Vercel (planned)                    | Native Next.js integration                                                 |
 | Linting      | Biome 2                             | Single tool for format + lint + import sort; faster than ESLint + Prettier |
+| Animation    | Motion (Framer Motion successor)    | Subtle, reduced-motion-aware transitions: SVG draw-on, scroll reveals, count-ups, phase crossfades |
 | Email (dev)  | Resend (custom SMTP)                | Supabase's built-in email caps at ~2/hour; Resend free tier is 100/day     |
 
 ---
@@ -72,7 +73,7 @@ common-ground/
     Two transport mechanisms drive the same handlers:
 
     - **Production**: three Supabase database webhooks (configured in the Supabase dashboard) POST to `app/api/bot/match-created`, `/api/bot/message-inserted`, `/api/bot/user-queued`. Each route is ~25 lines, verifies a `BOT_WEBHOOK_SECRET` header, and calls the handler. `maxDuration = 30` to fit Vercel Hobby's 60s function cap with headroom.
-    - **Local dev** (`pnpm bot:dev`): one admin-client process subscribes via Supabase Realtime to `messages` and `matches` INSERTs and polls `match_queue` every 2s. Each event invokes the same handler functions. No webhooks, no public URL needed.
+    - **Local dev** (`npm run bot:dev`): one admin-client process subscribes via Supabase Realtime to `messages` and `matches` INSERTs and polls `match_queue` every 2s. Each event invokes the same handler functions. No webhooks, no public URL needed.
 
     Same business logic in both. The only thing that differs is the trigger.
 
@@ -80,8 +81,9 @@ common-ground/
 15. **Results screen as the product's payoff moment.** `/chat/[matchId]/results` is the after-the-final-vote view. Server component reads `matches.score_a/b` (baseline at pairing), all `stance_history` rows for both participants (relaxed RLS allows partner-side reads of per-round scores), and the user's own `reflections` (strict own-only RLS — partner can't see them). Builds two `Trajectory` objects (`baseline → r1 → r2 → r3`), renders the dual-line `StanceTrajectory` SVG chart (custom, ~100 lines, no chart library), computes a `Converged` / `Held ground` / `Diverged` verdict from the distance delta, and shows the user's private per-round reflections at the bottom. Redirects to `/chat/[matchId]` if status isn't `'completed'` so the payoff isn't shown for abandoned matches.
 5. **RLS-everywhere, no service-key in the app.** Every public table has `enable row level security`. The Next.js server only ever uses the publishable (anon) key — the service/secret key lives in `.env.local` and is used only by maintenance scripts (`seed-bots.ts`, `bot.ts`). RLS-bypass paths (like `find_match` inserting into `matches`) are confined to specific `SECURITY DEFINER` functions.
 6. **Optimistic UI for sending; dedupe on receive.** Sent messages render immediately with a temp UUID. The server action returns the real row, the client replaces the temp by id. Realtime also delivers the same row to the sender — the receive handler dedupes by id so it's idempotent regardless of which arrives first.
-7. **Bots as first-class fixtures.** Five seeded auth users (Alex, Sam, Riley, Jordan, Casey) live in the dev DB. A CLI (`pnpm bot queue|pair|say|leave|status`) drives them, which lets one developer test matchmaking and chat end-to-end without two browsers. The bots' `user_propositions` are seeded so every (proposition, stance) combo has a partner.
+7. **Bots as first-class fixtures.** Five seeded auth users (Alex, Sam, Riley, Jordan, Casey) live in the dev DB. A CLI (`npm run bot queue|pair|say|leave|status`) drives them, which lets one developer test matchmaking and chat end-to-end without two browsers. The bots' `user_propositions` are seeded so every (proposition, stance) combo has a partner.
 8. **Biome with scoped overrides.** Biome 2 handles formatting, linting, and import sorting in a single pass. The `components/ui/**` directory has a small `overrides` block that disables a handful of a11y rules that fire spuriously on shadcn primitives (`useFocusableInteractive`, `useSemanticElements`, etc.) — the files are still formatted and linted for everything else.
+16. **Subtle, accessible animation as a layer, not a rewrite.** The editorial design (serif, parchment, 1px borders) calls for restraint, so motion is hybrid: the `motion` library handles the orchestrated pieces (the results stance-trajectory SVG draw-on via `pathLength`, chat message enter, onboarding/match phase crossfades with `AnimatePresence`) while plain CSS covers hovers and simple fades. Two shared primitives — `components/reveal.tsx` (IntersectionObserver fade-up) and `components/count-up.tsx` (landing stats) — keep usage consistent. Everything honors `prefers-reduced-motion`: a global CSS guard in `app/globals.css` neutralizes CSS transitions, and each motion component checks `useReducedMotion()` and renders its final state instantly.
 
 ---
 
@@ -172,7 +174,7 @@ All tables live in `public`. Every table has RLS enabled.
 | `stance_history`   | Audit trail of stance changes (linked to a match if conversational) | Has `score smallint (1–7)` and `round smallint (1–3, nullable)`. `match_id` nullable — null = manual/onboarding-time update |
 | `reflections`      | Per-round one-liners ("what's shifting for you")             | Strictly private (own-only RLS). UNIQUE `(user_id, match_id, round)`, ≤280 chars |
 
-Migrations are append-only: `00001_initial_schema.sql`, `00002_match_queue.sql`, `00003_propositions.sql`, `00004_tighten_privacy.sql`, `00005_events.sql`, `00006_likert_rounds_reactions.sql`, `00007_end_conversation.sql`. Applied in order via the Supabase SQL Editor.
+Migrations are append-only: `00001_initial_schema.sql`, `00002_match_queue.sql`, `00003_propositions.sql`, `00004_tighten_privacy.sql`, `00005_events.sql`, `00006_likert_rounds_reactions.sql`, `00007_end_conversation.sql`, `00008_no_self_reactions.sql`, `00009_reactions_realtime_delete.sql`. Applied in order via the Supabase SQL Editor.
 
 ---
 
@@ -198,22 +200,22 @@ Migrations are append-only: `00001_initial_schema.sql`, `00002_match_queue.sql`,
 ## Local Development
 
 ```bash
-pnpm install
-pnpm dev                                              # start Next on :3000
-pnpm lint                                             # biome check
-pnpm lint:fix                                         # biome check --write
-pnpm seed:bots                                        # create the 5 bot users + propositions
+npm install
+npm run dev                                           # start Next on :3000
+npm run lint                                          # biome check
+npm run lint:fix                                      # biome check --write
+npm run seed:bots                                     # create the 5 bot users + propositions
 
 # Local-dev bot runner. Subscribes to Supabase Realtime events and dispatches
 # them through the same handlers the production webhooks use.
-pnpm bot:dev      # (alias: pnpm bot:run for muscle memory)
+npm run bot:dev   # (alias: npm run bot:run for muscle memory)
 
 # One-off bot commands (still useful for ad-hoc testing):
-pnpm bot queue <prop-slug> [stance] [bot]             # bot joins queue / matches
-pnpm bot pair <email> <prop-slug> <my> <bot> [bot]    # hand-pair a bot with the real user
-pnpm bot say <bot> <match-id> <message...>            # bot sends a message
-pnpm bot vote <bot> <match-id> <score:1-7> [reflection...]  # bot votes the current round
-pnpm bot status                                       # show queue + active matches
+npm run bot queue <prop-slug> [stance] [bot]          # bot joins queue / matches
+npm run bot pair <email> <prop-slug> <my> <bot> [bot] # hand-pair a bot with the real user
+npm run bot say <bot> <match-id> <message...>         # bot sends a message
+npm run bot vote <bot> <match-id> <score:1-7> [reflection...]  # bot votes the current round
+npm run bot status                                    # show queue + active matches
 ```
 
 Required env in `.env.local`:
@@ -249,9 +251,9 @@ Apply the migrations in the Supabase SQL Editor in numeric order.
 
 Two layers, both runnable with one command each.
 
-**Unit (`pnpm test`)** — Node's built-in test runner (`node:test`) via tsx, no bundler. Covers the pure-function libs: `lib/stance.ts` (score↔label↔stance mapping) and `lib/prompts.ts` (stage selection, deterministic prompt-per-match hashing, threshold ordering). Fast, no DB, no network. (We deliberately avoided Vitest here — v4's Rolldown and v3's Vite-7 pairing both hit native-binding / ESM-CJS issues on this machine; `node:test` sidesteps all of it.)
+**Unit (`npm test`)** — Node's built-in test runner (`node:test`) via tsx, no bundler. Covers the pure-function libs: `lib/stance.ts` (score↔label↔stance mapping) and `lib/prompts.ts` (stage selection, deterministic prompt-per-match hashing, threshold ordering). Fast, no DB, no network. (We deliberately avoided Vitest here — v4's Rolldown and v3's Vite-7 pairing both hit native-binding / ESM-CJS issues on this machine; `node:test` sidesteps all of it.)
 
-**E2E (`pnpm test:e2e`)** — Playwright. `playwright.config.ts` defines a desktop-chromium project plus a mobile (iPhone 14) project that only runs `*.mobile.spec.ts`. The config boots its own dev server with `ENABLE_TEST_AUTH=1`.
+**E2E (`npm run test:e2e`)** — Playwright. `playwright.config.ts` defines a desktop-chromium project plus a mobile (iPhone 14) project that only runs `*.mobile.spec.ts`. The config boots its own dev server with `ENABLE_TEST_AUTH=1`.
 
 - **Auth in tests**: there's no password field in the real UI (magic-link only), so a test-only route `app/api/test/sign-in/route.ts` calls `signInWithPassword` server-side and sets the SSR cookies. It's gated by `NODE_ENV !== "production"` **and** `ENABLE_TEST_AUTH=1`, so it 404s everywhere except the test runner.
 - **Test fixtures** (`tests/helpers/`): `admin.ts` (service-role client), `auth.ts` (`ensureTestUser`, `signInAs`), `db.ts` (`resetChats`, `onboardUser`, `queueUserForProposition`, `fillMessages`, `castVoteForPartner`). These let a test set up exact DB state and drive the "partner" side deterministically without the bot worker.
@@ -326,4 +328,4 @@ Adding a new event = one `track("name", { ... })` call at the right server-side 
 
 ## Roadmap
 
-Tracked in the Notion [Build Tracker](https://www.notion.so/2cf011903cf3477e8563ca39cc4e82dc). Done: landing page, auth, schema, onboarding (Likert), matching logic, matching screen, chat room, realtime, bot fixtures, privacy-tightening migration, analytics events, rounds + per-round voting + reactions + reflections, AI bot replies (Groq), serverless bot architecture (Path C), results screen with stance-trajectory chart, **profile page with cross-conversation stance evolution sparklines**. Open: mobile responsive polish, Vercel deploy, README + case study.
+Tracked in the Notion [Build Tracker](https://www.notion.so/2cf011903cf3477e8563ca39cc4e82dc). Done: landing page, auth, schema, onboarding (Likert), matching logic, matching screen, chat room, realtime, bot fixtures, privacy-tightening migration, analytics events, rounds + per-round voting + reactions + reflections, AI bot replies (Groq), serverless bot architecture (Path C), results screen with stance-trajectory chart, profile page with cross-conversation stance evolution sparklines, **subtle animation layer (motion) across all pages**, **README + technical docs**. Open: mobile responsive polish, Vercel deploy, case study.
